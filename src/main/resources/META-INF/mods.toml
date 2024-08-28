@@ -1,0 +1,16 @@
+modLoader="javafml"
+loaderVersion="[0,]"
+issueTrackerURL="https://minecraftforge.net/"
+logoFile="forge_logo.png"
+license="LGPL v2.1"
+
+[[mods]]
+    modId="lfml"
+    version="1.0.0"
+    updateJSONURL="https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
+    displayURL="https://minecraftforge.net/"
+    displayName="Lua Forge Mod Loader"
+    credits="Anyone who has contributed on Github and supports our development"
+    authors="MangoRage"
+    description='''
+    '''
