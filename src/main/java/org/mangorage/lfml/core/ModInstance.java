@@ -14,6 +14,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class ModInstance {
+    public class Example {
+        public interface ex {
+            void accept(String a, String bv);
+        }
+        public void accept(ex a) {}
+    }
+
+
     private static final Path SCRIPTS_HOME = Path.of("scripts");
 
     private final ModInfo modInfo;
