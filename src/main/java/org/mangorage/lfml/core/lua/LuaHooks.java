@@ -1,5 +1,6 @@
 package org.mangorage.lfml.core.lua;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,17 +18,20 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
-import org.luaj.vm2.lib.jse.LuajavaLib;
 import org.mangorage.lfml.core.LFMLMod;
+import org.mangorage.lfml.core.LFMLUtils;
 import org.mangorage.lfml.core.ModInstance;
 
-import java.lang.reflect.Proxy;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * lmflCore.hooks:method(args)
@@ -36,9 +40,17 @@ public class LuaHooks {
 
     private final ModInstance modInstance;
     private final ClassLoader classLoader = LFMLMod.class.getClassLoader();
+    private final LuaWrapHandler wrapHandler = new LuaWrapHandler();
 
     public LuaHooks(ModInstance modInstance) {
         this.modInstance = modInstance;
+        wrapHandler.register(CreativeModeTab.DisplayItemsGenerator.class, lf -> (parameters, output) -> lf.invoke(
+                LuaValue.varargsOf(
+                        new LuaValue[] {
+                                CoerceJavaToLua.coerce(parameters),
+                                CoerceJavaToLua.coerce(output)
+                        })
+        ));
     }
 
     // REGISTRY START
@@ -77,36 +89,12 @@ public class LuaHooks {
         return new Item.Properties();
     }
 
-    public CreativeModeTab.Builder createCreativeTabBuilder() {
+    public CreativeModeTab.Builder createCreativeModeTabBuilder() {
         return CreativeModeTab.builder();
     }
 
     public Supplier<CreativeModeTab> createCreativeModeTab(CreativeModeTab.Builder builder) {
         return builder::build;
-    }
-
-    public Object createGenerator() {
-        class generator {
-            record ItemHolder(Supplier<Item> itemSupplier) implements ItemLike {
-                @Override
-                public Item asItem() {
-                    return itemSupplier().get();
-                }
-            }
-            private final List<ItemLike> items = new ArrayList<>();
-
-            public generator addItem(Supplier<Item> itemSupplier) {
-                items.add(new ItemHolder(itemSupplier));
-                return this;
-            }
-
-            public CreativeModeTab.DisplayItemsGenerator build() {
-                return (a, b) -> {
-                    items.forEach(b::accept);
-                };
-            }
-        }
-        return new generator();
     }
     // ITEMS END
 
@@ -129,8 +117,45 @@ public class LuaHooks {
     // EVENT END
 
     // HELPERS START
+    public Object wrap(String clazz, LuaFunction luaFunction) {
+        return wrapHandler.create(clazz, luaFunction);
+    }
+
+    private LuaWrappedMethod getMethodInternal(Class<?> clazz, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
+        return new LuaWrappedMethod(clazz.getDeclaredMethod(method, parameterTypes));
+    }
+
+    public LuaWrappedMethod getMethod(String clazz, String method, LuaTable typesTable) {
+        var types = LFMLUtils.luaTableToStringArray(typesTable);
+        try {
+            return getMethodInternal(
+                    Class.forName(clazz),
+                    method,
+                    Arrays.stream(types)
+                            .map(t -> {
+                                try {
+                                    return Class.forName(t);
+                                } catch (ClassNotFoundException e) {
+                                    throw new IllegalStateException(e);
+                                }
+                            })
+                            .toArray(Class[]::new)
+            );
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     public Component literal(String string) {
         return Component.literal(string);
+    }
+
+    public ResourceLocation createResourceLocation(String name, String path) {
+        return ResourceLocation.fromNamespaceAndPath(name, path);
+    }
+
+    public Supplier<Object> getRegistryObject(ResourceLocation registry, ResourceLocation entry) {
+        return BuiltInRegistries.REGISTRY.get(registry).getHolder(entry).orElseThrow()::get;
     }
     // HELPERS END
 
