@@ -13,6 +13,6 @@ public class LuaWrappedMethod {
     }
 
     public void invoke(Object instance, LuaTable table) throws InvocationTargetException, IllegalAccessException {
-        method.invoke(instance, LFMLUtils.extractJavaObjects(table));
+        method.invoke(instance, LFMLUtils.extractJavaObjects(table).toArray());
     }
 }

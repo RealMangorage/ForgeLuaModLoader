@@ -7,6 +7,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -16,6 +18,7 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
@@ -77,6 +80,10 @@ public class LuaHooks {
     // BLOCKS END
 
     // ITEMS START
+    public Supplier<ItemStack> createDefaultItemStackFromItem(Supplier<Item> temRegistryObject) {
+        return () -> temRegistryObject.get().getDefaultInstance();
+    }
+
     public Supplier<Item> createBasicItem(Item.Properties properties) {
         return () -> new Item(properties);
     }
@@ -122,7 +129,7 @@ public class LuaHooks {
     }
 
     private LuaWrappedMethod getMethodInternal(Class<?> clazz, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
-        return new LuaWrappedMethod(clazz.getDeclaredMethod(method, parameterTypes));
+        return new LuaWrappedMethod(clazz.getMethod(method, parameterTypes));
     }
 
     public LuaWrappedMethod getMethod(String clazz, String method, LuaTable typesTable) {
