@@ -18,23 +18,17 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
+import org.luaj.vm2.lib.jse.CoerceLuaToJava;
 import org.mangorage.lfml.core.LFMLMod;
 import org.mangorage.lfml.core.LFMLUtils;
 import org.mangorage.lfml.core.ModInstance;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * lmflCore.hooks:method(args)
@@ -80,10 +74,6 @@ public class LuaHooks {
     // BLOCKS END
 
     // ITEMS START
-    public Supplier<ItemStack> createDefaultItemStackFromItem(Supplier<Item> temRegistryObject) {
-        return () -> temRegistryObject.get().getDefaultInstance();
-    }
-
     public Supplier<Item> createBasicItem(Item.Properties properties) {
         return () -> new Item(properties);
     }
@@ -98,10 +88,6 @@ public class LuaHooks {
 
     public CreativeModeTab.Builder createCreativeModeTabBuilder() {
         return CreativeModeTab.builder();
-    }
-
-    public Supplier<CreativeModeTab> createCreativeModeTab(CreativeModeTab.Builder builder) {
-        return builder::build;
     }
     // ITEMS END
 
@@ -163,6 +149,10 @@ public class LuaHooks {
 
     public Supplier<Object> getRegistryObject(ResourceLocation registry, ResourceLocation entry) {
         return BuiltInRegistries.REGISTRY.get(registry).getHolder(entry).orElseThrow()::get;
+    }
+
+    public Supplier<Object> createSupplier(LuaFunction function) {
+        return () -> CoerceLuaToJava.coerce(function.invoke().arg1(), Object.class);
     }
     // HELPERS END
 
