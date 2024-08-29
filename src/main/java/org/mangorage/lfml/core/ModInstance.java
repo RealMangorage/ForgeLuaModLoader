@@ -1,6 +1,7 @@
 package org.mangorage.lfml.core;
 
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -52,8 +53,8 @@ public class ModInstance {
         // Creating a Lua table to hold the Java object
         LuaTable table = new LuaTable();
         table.set("hooks", CoerceJavaToLua.coerce(new LuaHooks(this)));
-        globals.set("lmflCore", table);
-
+        table.set("modBus", CoerceJavaToLua.coerce(bus));
+        globals.set("lfmlCore", table);
 
         try (FileReader fileReader = new FileReader(mainScript)) {
             System.out.println("Loading: " + mainScript.getName());

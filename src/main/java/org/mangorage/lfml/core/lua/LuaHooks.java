@@ -1,7 +1,9 @@
 package org.mangorage.lfml.core.lua;
 
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
@@ -18,6 +20,8 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import org.checkerframework.checker.units.qual.C;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
@@ -50,48 +54,6 @@ public class LuaHooks {
         ));
     }
 
-    // REGISTRY START
-    public <T> DeferredRegister<T> deferredRegistry(String name, String space) {
-        DeferredRegister<T> dr = DeferredRegister.create(ResourceLocation.fromNamespaceAndPath(name, space), modInstance.getModInfo().modId());
-        dr.register(modInstance.modBus());
-        return dr;
-    }
-    // REGISTRY END
-
-
-    // BLOCKS START
-    public Supplier<Block> createBasicBlock(BlockBehaviour.Properties properties) {
-        return () -> new Block(properties);
-    }
-
-    public BlockBehaviour.Properties createBlockProperties() {
-        return BlockBehaviour.Properties.of();
-    }
-
-    public BlockState getBlockState(String modID, String name) {
-        return BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(modID, name)).defaultBlockState();
-    }
-    // BLOCKS END
-
-    // ITEMS START
-    public Supplier<Item> createBasicItem(Item.Properties properties) {
-        return () -> new Item(properties);
-    }
-
-    public Supplier<BlockItem> createBlockItem(Supplier<Block> block, Item.Properties properties) {
-        return () -> new BlockItem(block.get(), properties);
-    }
-
-    public Item.Properties createItemProperties() {
-        return new Item.Properties();
-    }
-
-    public CreativeModeTab.Builder createCreativeModeTabBuilder() {
-        return CreativeModeTab.builder();
-    }
-    // ITEMS END
-
-
     // EVENT START
     public void hookEvent(boolean modBus, String eventType, LuaClosure closure) {
         try {
@@ -118,6 +80,20 @@ public class LuaHooks {
         return new LuaWrappedMethod(clazz.getMethod(method, parameterTypes));
     }
 
+    public Object getClass(String clazz) throws ClassNotFoundException {
+        return getClass(clazz, false);
+    }
+
+    public Object getClass(String clazz, boolean wrap) throws ClassNotFoundException {
+        var a = Class.forName(clazz);
+        return wrap ? new LuaWrappedClass(a) : a;
+    }
+
+
+    public LuaValue JavaToLua(Object o) {
+        return CoerceJavaToLua.coerce(o);
+    }
+
     public LuaWrappedMethod getMethod(String clazz, String method, LuaTable typesTable) {
         var types = LFMLUtils.luaTableToStringArray(typesTable);
         try {
@@ -139,16 +115,8 @@ public class LuaHooks {
         }
     }
 
-    public Component literal(String string) {
-        return Component.literal(string);
-    }
-
     public ResourceLocation createResourceLocation(String name, String path) {
         return ResourceLocation.fromNamespaceAndPath(name, path);
-    }
-
-    public Supplier<Object> getRegistryObject(ResourceLocation registry, ResourceLocation entry) {
-        return BuiltInRegistries.REGISTRY.get(registry).getHolder(entry).orElseThrow()::get;
     }
 
     public Supplier<Object> createSupplier(LuaFunction function) {

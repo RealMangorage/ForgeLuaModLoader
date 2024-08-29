@@ -8,8 +8,8 @@ end
 
 _G.root = module
 
-requireAndLoad("core/registry/", "blocks")
+--requireAndLoad("core/registry/", "blocks")
 requireAndLoad("core/registry/", "items")
-requireAndLoad("core/registry/", "creativetab")
-requireAndLoad("core/", "events")
+--requireAndLoad("core/registry/", "creativetab")
+--requireAndLoad("core/", "events")
 
