@@ -1,33 +1,44 @@
 local module = {}
 
-local hooks = lfmlCore.hooks
-local modBus = lfmlCore.modBus
+local modBus = modInfo.modBus
 
-local RLHelper = hooks:JavaToLua(hooks:getClass("net.minecraft.resources.ResourceLocation"))
-local DRHelper = hooks:JavaToLua(hooks:getClass("net.minecraftforge.registries.DeferredRegister"))
-local registries = hooks:JavaToLua(hooks:getClass("net.minecraft.core.registries.Registries"))
+local DRHelper = import("net.minecraftforge.registries.DeferredRegister")
+local registries = import("net.minecraft.core.registries.Registries")
+local Blocks = import("net.minecraft.world.level.block.Blocks")
 
-local itemClass = hooks:JavaToLua(hooks:getClass("net.minecraft.world.item.Item"))
-local itemPropertiesClass = hooks:JavaToLua(hooks:getClass("net.minecraft.world.item.Item$Properties"))
+local itemClass = import("org.mangorage.lfml.core.lua.prototypes.ItemPrototype")
+local itemPropertiesClass = import("net.minecraft.world.item.Item$Properties")
 
-local itemsDR = DRHelper:create(registries.ITEM, "example")
+local itemsDR = DRHelper:create(registries.ITEM, modId)
 itemsDR:register(modBus)
 
-function module.load()
+function module.init()
+    local TestItemProto = require("items/TestItem")
+    local examplePrototype = function()
+        return TestItemProto:create()
+    end
 
-    local exampleBuilder = function(size)
+    local exampleBuilder = function(size, extend)
         return function()
-            return itemClass.new(itemPropertiesClass.new():stacksTo(size))
+            if not extend then
+                return itemClass.new(itemPropertiesClass.new():stacksTo(size), examplePrototype(), modCore:createSupplier(examplePrototype))
+            else
+                local prototype = root.items.exampleItem:get()
+                local table = prototype:copyProtoTypeImpl()
+                table.block = Blocks.DIAMOND_BLOCK
+                print(table.block)
+                return itemClass.new(itemPropertiesClass.new():stacksTo(size), table, prototype:getCtor())
+            end
         end
     end
 
     module.exampleItem = itemsDR:register(
            "example",
-            hooks:createSupplier(exampleBuilder(2))
+            modCore:createSupplier(exampleBuilder(2, false))
     )
     module.exampleItem2 = itemsDR:register(
             "example2",
-            hooks:createSupplier(exampleBuilder(16))
+            modCore:createSupplier(exampleBuilder(16, true))
     )
 end
 

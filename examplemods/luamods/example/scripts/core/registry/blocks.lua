@@ -1,15 +1,24 @@
 local module = {}
 
-local hooks = lmflCore.hooks
-local blocks = hooks:deferredRegistry("minecraft", "block")
+local modBus = modInfo.modBus
 
-function module.load()
-    module.exampleBlock = blocks:register(
+local DRHelper = import("net.minecraftforge.registries.DeferredRegister")
+local registries = import("net.minecraft.core.registries.Registries")
+
+local blockClass = import("net.minecraft.world.level.block.Block")
+local blockPropertiesClass = import("net.minecraft.world.level.block.state.BlockBehaviour$Properties")
+
+local blocksDR = DRHelper:create(registries.BLOCK, modId)
+blocksDR:register(modBus)
+
+function module.init()
+    local blockSupplier = function()
+        return blockClass.new(blockPropertiesClass:of())
+    end
+
+    module.exampleBlock = blocksDR:register(
             "test",
-            hooks:createBasicBlock(
-                    hooks:createBlockProperties()
-                         :instabreak()
-            )
+            modCore:createSupplier(blockSupplier)
     )
 end
 

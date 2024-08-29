@@ -1,13 +1,16 @@
 package org.mangorage.lfml.core;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JsePlatform;
-import org.mangorage.lfml.core.lua.LuaHooks;
+import org.mangorage.lfml.core.lua.LuaModCore;
 
 import java.io.File;
 import java.io.FileReader;
@@ -15,14 +18,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class ModInstance {
-    public class Example {
-        public interface ex {
-            void accept(String a, String bv);
-        }
-        public void accept(ex a) {}
-    }
-
-
     private static final Path SCRIPTS_HOME = Path.of("scripts");
 
     private final ModInfo modInfo;
@@ -40,21 +35,20 @@ public class ModInstance {
         this.modInfo = modInfo;
         this.modBus = bus;
 
-        // Create the Lua environment with standard libraries
+
         Globals globals = JsePlatform.standardGlobals();
 
-        // Set the Lua package path to include the scripts directory
         String scriptsPath = modDir.resolve(SCRIPTS_HOME).toAbsolutePath().toString().replace("\\", "/") + "/?.lua;";
         globals.get("package").set("path", scriptsPath);
 
-        // Load the main script that may require other scripts
+
         File mainScript = modDir.resolve(SCRIPTS_HOME).resolve("main.lua").toFile();
 
-        // Creating a Lua table to hold the Java object
-        LuaTable table = new LuaTable();
-        table.set("hooks", CoerceJavaToLua.coerce(new LuaHooks(this)));
-        table.set("modBus", CoerceJavaToLua.coerce(bus));
-        globals.set("lfmlCore", table);
+        LuaTable modInfoTable = new LuaTable();
+        modInfoTable.set("modBus", CoerceJavaToLua.coerce(bus));
+        globals.set("modId", modInfo.modId());
+        globals.set("modInfo", modInfoTable);
+        globals.set("modCore", CoerceJavaToLua.coerce(new LuaModCore()));
 
         try (FileReader fileReader = new FileReader(mainScript)) {
             System.out.println("Loading: " + mainScript.getName());

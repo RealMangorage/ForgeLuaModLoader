@@ -1,50 +1,35 @@
 local module = {}
 
-local hooks = lmflCore.hooks
-local itemRegistry = hooks:createResourceLocation("minecraft", "item");
-local tabs = hooks:deferredRegistry("minecraft", "creative_mode_tab")
+local modBus = modInfo.modBus
 
+local DRHelper = import("net.minecraftforge.registries.DeferredRegister")
+local registries = import("net.minecraft.core.registries.Registries")
 
-function module.load()
-    local acceptItemLike = hooks:getMethod(
-            "net.minecraft.world.item.CreativeModeTab$Output",
-            "accept",
-            {
-                "net.minecraft.world.level.ItemLike"
-            }
-    )
+local Items = import("net.minecraft.world.item.Items")
 
-    local gg = hooks:wrap("net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator", function(a, b)
-        acceptItemLike:invoke(
-                b,
-                {
-                    root.items.exampleItem:get()
-                }
-        )
-        acceptItemLike:invoke(
-                b,
-                {
-                    hooks:getRegistryObject(
-                            itemRegistry,
-                            hooks:createResourceLocation("minecraft", "stone")
-                    ):get()
-                }
-        )
-        return nil
-    end)
+local CreativeModeTabClass = import("net.minecraft.world.item.CreativeModeTab")
+local ComponentClass = import("net.minecraft.network.chat.Component")
 
+local creativeTabDR = DRHelper:create(registries.CREATIVE_MODE_TAB, modId)
+creativeTabDR:register(modBus)
 
-    tabs:register(
+function module.init()
+    local display = function(a, b)
+        b:accept(root.items.exampleItem:get())
+    end
+
+    local icon = function()
+        return Items.IRON_INGOT:getDefaultInstance()
+    end
+
+    creativeTabDR:register(
             "example",
-            hooks:createSupplier(
+            modCore:createSupplier(
                     function()
-                        return hooks:createCreativeModeTabBuilder()
-                                :title(hooks:literal("Test"))
-                                :icon(hooks:createSupplier(
-                                function()
-                                    return root.items.exampleItem:get():getDefaultInstance()
-                                end))
-                                :displayItems(gg)
+                        return CreativeModeTabClass:builder()
+                                :title(ComponentClass:literal("TEST"))
+                                :icon(modCore:createSupplier(icon))
+                                :displayItems(modCore:wrap( "net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator", display))
                                 :build()
                     end
             )

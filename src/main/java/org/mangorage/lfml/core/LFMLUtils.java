@@ -3,6 +3,8 @@ package org.mangorage.lfml.core;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LFMLUtils {
+
     /**
      * Traverses a folder up to the specified depth and returns a list of paths.
      *
@@ -29,6 +32,7 @@ public class LFMLUtils {
         }
         return pathList;
     }
+
     // Method to convert LuaTable to String[]
     public static String[] luaTableToStringArray(LuaTable luaTable) {
         // Determine the size of the LuaTable
@@ -50,6 +54,7 @@ public class LFMLUtils {
 
         return stringArray;
     }
+
     public static List<Object> extractJavaObjects(LuaTable luaTable) {
         List<Object> javaObjects = new ArrayList<>();
 
@@ -66,5 +71,44 @@ public class LFMLUtils {
         }
 
         return javaObjects;
+    }
+
+    public static Varargs convertToVarargs(Object... args) {
+        LuaTable table = new LuaTable();
+        for (int i = 0; i < args.length; i++) {
+            table.set(i + 1, CoerceJavaToLua.coerce(args[i]));
+        }
+        return table;
+    }
+
+
+    public static LuaTable deepCopy(LuaTable original) {
+        LuaTable copy = new LuaTable(); // Create a new LuaTable for the copy
+        copyTable(original, copy);      // Recursively copy contents
+        return copy;
+    }
+
+    // Recursive helper function to copy contents of one table to another
+    private static void copyTable(LuaTable original, LuaTable copy) {
+        LuaValue key = LuaValue.NIL;
+
+        // Iterate over the original table to copy each key-value pair
+        while (true) {
+            Varargs next = original.next(key);  // Get the next key-value pair
+            key = next.arg1();
+            if (key.isnil()) break;  // Stop when there are no more elements
+
+            LuaValue value = original.get(key);
+
+            // If the value is a table, recursively copy it
+            if (value.istable()) {
+                LuaTable nestedCopy = new LuaTable();
+                copyTable(value.checktable(), nestedCopy);
+                copy.set(key, nestedCopy);
+            } else {
+                // Otherwise, directly set the value
+                copy.set(key, value);
+            }
+        }
     }
 }

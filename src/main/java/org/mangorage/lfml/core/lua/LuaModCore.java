@@ -1,27 +1,13 @@
 package org.mangorage.lfml.core.lua;
 
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.checkerframework.checker.units.qual.C;
+import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
@@ -30,21 +16,18 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava;
 import org.mangorage.lfml.core.LFMLMod;
 import org.mangorage.lfml.core.LFMLUtils;
-import org.mangorage.lfml.core.ModInstance;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
  * lmflCore.hooks:method(args)
  */
-public class LuaHooks {
+public class LuaModCore {
 
-    private final ModInstance modInstance;
     private final ClassLoader classLoader = LFMLMod.class.getClassLoader();
     private final LuaWrapHandler wrapHandler = new LuaWrapHandler();
 
-    public LuaHooks(ModInstance modInstance) {
-        this.modInstance = modInstance;
+    public LuaModCore() {
         wrapHandler.register(CreativeModeTab.DisplayItemsGenerator.class, lf -> (parameters, output) -> lf.invoke(
                 LuaValue.varargsOf(
                         new LuaValue[] {
@@ -55,11 +38,10 @@ public class LuaHooks {
     }
 
     // EVENT START
-    public void hookEvent(boolean modBus, String eventType, LuaClosure closure) {
+    public void hookModEvent(IEventBus modBus, String eventType, LuaClosure closure) {
         try {
             Class<Event> eventClass = (Class<Event>) Class.forName(eventType);
-            IEventBus bus = modBus ? modInstance.modBus() : MinecraftForge.EVENT_BUS;
-            bus.addListener(
+            modBus.addListener(
                     EventPriority.NORMAL,
                     false,
                     eventClass,
@@ -89,9 +71,12 @@ public class LuaHooks {
         return wrap ? new LuaWrappedClass(a) : a;
     }
 
-
     public LuaValue JavaToLua(Object o) {
         return CoerceJavaToLua.coerce(o);
+    }
+
+    public Object LuaToJava(LuaValue luaValue, String clazz) throws ClassNotFoundException {
+        return CoerceLuaToJava.coerce(luaValue, Class.forName(clazz));
     }
 
     public LuaWrappedMethod getMethod(String clazz, String method, LuaTable typesTable) {
@@ -110,13 +95,10 @@ public class LuaHooks {
                             })
                             .toArray(Class[]::new)
             );
+
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    public ResourceLocation createResourceLocation(String name, String path) {
-        return ResourceLocation.fromNamespaceAndPath(name, path);
     }
 
     public Supplier<Object> createSupplier(LuaFunction function) {
