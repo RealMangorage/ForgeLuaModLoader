@@ -174,6 +174,27 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+// Task to delete the existing luamods directory in run/mods
+task deleteLuaMods(type: Delete) {
+    delete 'run/mods/luamods' // Specify the folder to delete
+}
+
+// Task to copy luamods to the run/mods directory
+task copyLuaMods(type: Copy) {
+    from 'examplemods/luamods' // Source folder
+    into 'run/mods/luamods'            // Destination folder
+    dependsOn deleteLuaMods    // Ensure the delete task runs first
+    mustRunAfter deleteLuaMods
+}
+
+// Ensure copyLuaMods runs before any other task
+tasks.matching { task ->
+    task.name != 'copyLuaMods' && task.name != 'deleteLuaMods'
+}.all { task ->
+    task.dependsOn copyLuaMods
+    task.mustRunAfter copyLuaMods
+}
+
 // Merge the resources and classes into the same directory.
 // This is done because java expects modules to be in a single directory.
 // And if we have it in multiple we have to do performance intensive hacks like having the UnionFileSystem
