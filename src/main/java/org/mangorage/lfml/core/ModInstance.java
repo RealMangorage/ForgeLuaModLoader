@@ -1,13 +1,8 @@
 package org.mangorage.lfml.core;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.mangorage.lfml.core.lua.LuaModCore;
@@ -41,8 +36,7 @@ public class ModInstance {
         String scriptsPath = modDir.resolve(SCRIPTS_HOME).toAbsolutePath().toString().replace("\\", "/") + "/?.lua;";
         globals.get("package").set("path", scriptsPath);
 
-
-        File mainScript = modDir.resolve(SCRIPTS_HOME).resolve("main.lua").toFile();
+        String mainScript = modDir.resolve(SCRIPTS_HOME).resolve("main.lua").toString();
 
         LuaTable modInfoTable = new LuaTable();
         modInfoTable.set("modBus", CoerceJavaToLua.coerce(bus));
@@ -50,13 +44,7 @@ public class ModInstance {
         globals.set("modInfo", modInfoTable);
         globals.set("modCore", CoerceJavaToLua.coerce(new LuaModCore()));
 
-        try (FileReader fileReader = new FileReader(mainScript)) {
-            System.out.println("Loading: " + mainScript.getName());
-            LuaValue chunk = globals.load(fileReader, mainScript.getName());
-            chunk.call(); // Execute the main script
-        } catch (IOException e) {
-            System.out.println("Error loading file: " + mainScript.getName());
-            throw new IllegalStateException(e);
-        }
+        var manager = new LuaScriptManager(globals, mainScript, bus);
+        manager.loadScript();
     }
 }

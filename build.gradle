@@ -174,25 +174,28 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
-// Task to delete the existing luamods directory in run/mods
-task deleteLuaMods(type: Delete) {
-    delete 'run/mods/luamods' // Specify the folder to delete
-}
+def copyOver = true
+if (copyOver) {
+    // Task to delete the existing luamods directory in run/mods
+    task deleteLuaMods(type: Delete) {
+        delete 'run/mods/luamods' // Specify the folder to delete
+    }
 
-// Task to copy luamods to the run/mods directory
-task copyLuaMods(type: Copy) {
-    from 'examplemods/luamods' // Source folder
-    into 'run/mods/luamods'            // Destination folder
-    dependsOn deleteLuaMods    // Ensure the delete task runs first
-    mustRunAfter deleteLuaMods
-}
+    // Task to copy luamods to the run/mods directory
+    task copyLuaMods(type: Copy) {
+        from 'examplemods/luamods' // Source folder
+        into 'run/mods/luamods'            // Destination folder
+        dependsOn deleteLuaMods    // Ensure the delete task runs first
+        mustRunAfter deleteLuaMods
+    }
 
-// Ensure copyLuaMods runs before any other task
-tasks.matching { task ->
-    task.name != 'copyLuaMods' && task.name != 'deleteLuaMods'
-}.all { task ->
-    task.dependsOn copyLuaMods
-    task.mustRunAfter copyLuaMods
+    // Ensure copyLuaMods runs before any other task
+    tasks.matching { task ->
+        task.name != 'copyLuaMods' && task.name != 'deleteLuaMods'
+    }.all { task ->
+        task.dependsOn copyLuaMods
+        task.mustRunAfter copyLuaMods
+    }
 }
 
 // Merge the resources and classes into the same directory.

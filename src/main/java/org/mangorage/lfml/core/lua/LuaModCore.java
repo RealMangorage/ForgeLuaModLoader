@@ -4,6 +4,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -38,7 +39,7 @@ public class LuaModCore {
     }
 
     // EVENT START
-    public void hookModEvent(IEventBus modBus, String eventType, LuaClosure closure) {
+    public void hookEvent(IEventBus modBus, String eventType, LuaClosure closure) {
         try {
             Class<Event> eventClass = (Class<Event>) Class.forName(eventType);
             modBus.addListener(

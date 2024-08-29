@@ -1,8 +1,10 @@
 local module = {}
 
-local hooks = lmflCore.hooks
+local Blocks = import("net.minecraft.world.level.block.Blocks")
+local MCF = import("net.minecraftforge.common.MinecraftForge")
 
-function module.load()
+function module.init()
+    reload()
 end
 
 function onPlayerTick(event)
@@ -10,10 +12,9 @@ function onPlayerTick(event)
     local lvl = event.player:level()
 
     local pos = plr:blockPosition():below()
-    lvl:setBlock(pos, root.blocks.exampleBlock:get():defaultBlockState(), 3)
-
+    lvl:setBlock(pos, Blocks.IRON_BLOCK:defaultBlockState(), 3)
 end
 
-hooks:hookEvent(false, "net.minecraftforge.event.TickEvent$PlayerTickEvent", onPlayerTick)
+modCore:hookEvent(MCF.EVENT_BUS, "net.minecraftforge.event.TickEvent$PlayerTickEvent", onPlayerTick)
 
 return module
