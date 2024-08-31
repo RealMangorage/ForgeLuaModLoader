@@ -5,7 +5,6 @@ import org.luaj.vm2.LuaTable;
 import java.util.function.Supplier;
 
 public interface IPrototype {
-    LuaTable getProtoTypeImpl();
-    LuaTable copyProtoTypeImpl();
-    Supplier<LuaTable> getCtor();
+    LuaTable extend();
+    LuaTable get();
 }

@@ -1,4 +1,4 @@
-package org.mangorage.lfml.core.lua;
+package org.mangorage.lfml.core.lua.helpers;
 
 public class LuaSwapableObject {
     private final Object READ_LOCK = new Object();

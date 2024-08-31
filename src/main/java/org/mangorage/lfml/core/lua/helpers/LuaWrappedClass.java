@@ -1,4 +1,4 @@
-package org.mangorage.lfml.core.lua;
+package org.mangorage.lfml.core.lua.helpers;
 
 import org.luaj.vm2.LuaTable;
 import org.mangorage.lfml.core.LFMLUtils;

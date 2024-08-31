@@ -1,34 +1,30 @@
-package org.mangorage.lfml.core.lua;
+package org.mangorage.lfml.core.lua.helpers;
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Items;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
-import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava;
-import org.mangorage.lfml.core.LFMLMod;
+import org.mangorage.lfml.core.loader.LFMLMod;
 import org.mangorage.lfml.core.LFMLUtils;
+
 import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
  * lmflCore.hooks:method(args)
  */
-public class LuaModCore {
+public class LuaCore {
 
     private final ClassLoader classLoader = LFMLMod.class.getClassLoader();
     private final LuaWrapHandler wrapHandler = new LuaWrapHandler();
 
-    public LuaModCore() {
+    public LuaCore() {
         wrapHandler.register(CreativeModeTab.DisplayItemsGenerator.class, lf -> (parameters, output) -> lf.invoke(
                 LuaValue.varargsOf(
                         new LuaValue[] {

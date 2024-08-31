@@ -1,9 +1,11 @@
 package org.mangorage.lfml.core;
 
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
 import java.io.IOException;
@@ -11,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class LFMLUtils {
 
@@ -74,41 +77,55 @@ public class LFMLUtils {
     }
 
     public static Varargs convertToVarargs(Object... args) {
-        LuaTable table = new LuaTable();
-        for (int i = 0; i < args.length; i++) {
-            table.set(i + 1, CoerceJavaToLua.coerce(args[i]));
-        }
-        return table;
+        return LuaValue.varargsOf(
+                Stream.of(args)
+                        .map(CoerceJavaToLua::coerce)
+                        .toArray(LuaValue[]::new)
+                );
     }
 
+    /**
+     * Recursively makes a Lua table and all its subtables read-only.
+     *
+     * @param originalTable The original Lua table to be made read-only.
+     * @return A read-only proxy of the original Lua table.
+     */
+    public static LuaTable makeReadOnly(LuaTable originalTable) {
+        // Create a proxy table that will act as the read-only table
+        LuaTable proxyTable = new LuaTable();
 
-    public static LuaTable deepCopy(LuaTable original) {
-        LuaTable copy = new LuaTable(); // Create a new LuaTable for the copy
-        copyTable(original, copy);      // Recursively copy contents
-        return copy;
-    }
+        // Metatable to define the read-only behavior
+        LuaTable metatable = new LuaTable();
 
-    // Recursive helper function to copy contents of one table to another
-    private static void copyTable(LuaTable original, LuaTable copy) {
-        LuaValue key = LuaValue.NIL;
-
-        // Iterate over the original table to copy each key-value pair
-        while (true) {
-            Varargs next = original.next(key);  // Get the next key-value pair
-            key = next.arg1();
-            if (key.isnil()) break;  // Stop when there are no more elements
-
-            LuaValue value = original.get(key);
-
-            // If the value is a table, recursively copy it
-            if (value.istable()) {
-                LuaTable nestedCopy = new LuaTable();
-                copyTable(value.checktable(), nestedCopy);
-                copy.set(key, nestedCopy);
-            } else {
-                // Otherwise, directly set the value
-                copy.set(key, value);
+        // __index to allow read access to the original table
+        metatable.set("__index", new TwoArgFunction() {
+            @Override
+            public LuaValue call(LuaValue self, LuaValue key) {
+                LuaValue value = originalTable.get(key);
+                if (value.istable()) {
+                    // Recursively apply read-only to subtables
+                    return makeReadOnly(value.checktable());
+                }
+                return value;
             }
-        }
+        });
+
+        // __newindex to prevent any modifications
+        metatable.set("__newindex", new TwoArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                throw new LuaError("Attempt to modify a read-only table");
+            }
+
+            @Override
+            public LuaValue call(LuaValue self, LuaValue key, LuaValue value) {
+                throw new LuaError("Attempt to modify a read-only table");
+            }
+        });
+
+        // Set the metatable on the proxy table
+        proxyTable.setmetatable(metatable);
+
+        return proxyTable;
     }
 }
