@@ -25,7 +25,7 @@ public class LuaBlockEntityPrototype extends BlockEntity implements ITicker {
                             .map(o -> (Block) o)
                             .collect(Collectors.toSet()),
                     null,
-                    () -> (LuaTable) moduleFunc.invoke()
+                    () -> (LuaTable) moduleFunc.invoke().arg1()
             );
         };
     }

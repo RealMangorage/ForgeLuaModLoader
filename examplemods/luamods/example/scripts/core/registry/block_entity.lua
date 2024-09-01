@@ -8,7 +8,7 @@ BLOCK_ENTITY:register(mod.modBus)
 
 function createPrototype()
     return {
-        tick = function(data, entity)
+        tick = function(prototype, data, entity)
             if data.ticks == nil then
                 data.ticks = 0
             end
