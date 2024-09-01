@@ -1,6 +1,7 @@
 package org.mangorage.lfml.core.lua.helpers;
 
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -23,6 +24,7 @@ public class LuaCore {
 
     private final ClassLoader classLoader = LFMLMod.class.getClassLoader();
     private final LuaWrapHandler wrapHandler = new LuaWrapHandler();
+    private final LuaImport IMPORTS = new LuaImport();
 
     public LuaCore() {
         wrapHandler.register(CreativeModeTab.DisplayItemsGenerator.class, lf -> (parameters, output) -> lf.invoke(
@@ -32,6 +34,8 @@ public class LuaCore {
                                 CoerceJavaToLua.coerce(output)
                         })
         ));
+
+        IMPORTS.register(Blocks.class, "BlockList");
     }
 
     // EVENT START
@@ -64,8 +68,8 @@ public class LuaCore {
     }
 
     public Object getClass(String clazz, boolean wrap) throws ClassNotFoundException {
-        var a = Class.forName(clazz);
-        return wrap ? new LuaWrappedClass(a) : a;
+        var clz = IMPORTS.getDefinedClassOrCache(clazz);
+        return wrap ? new LuaWrappedClass(clz) : clz;
     }
 
     public LuaValue JavaToLua(Object o) {

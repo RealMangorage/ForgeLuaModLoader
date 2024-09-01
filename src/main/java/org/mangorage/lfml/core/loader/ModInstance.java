@@ -1,5 +1,6 @@
 package org.mangorage.lfml.core.loader;
 
+import net.minecraft.DetectedVersion;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -52,7 +53,7 @@ public class ModInstance {
         ).call();
     }
 
-    static void init() {}
+    public static void init() {}
 
     public ModInstance(Path modDir, ModInfo modInfo, IEventBus bus) throws LuaModLoadingException {
         try {
@@ -84,8 +85,19 @@ public class ModInstance {
             PackRepository resourcePacks = Minecraft.getInstance().getResourcePackRepository();
             resourcePacks.addPackFinder((consumer) -> {
                 Pack pack = Pack.readMetaAndCreate(
-                        new PackLocationInfo(modInfo.modId(), Component.literal(modInfo.modId()), PackSource.DEFAULT, Optional.of(new KnownPack(modInfo.modId(), "default", SharedConstants.getCurrentVersion().getId()))),
-                        new PathPackResources.PathResourcesSupplier(modDir.resolve(RESOURCES_PATH)),
+                        new PackLocationInfo(
+                                modInfo.modId(),
+                                Component.literal(
+                                        modInfo.modId()
+                                ),
+                                PackSource.DEFAULT,
+                                Optional.of(
+                                    KnownPack.vanilla("test")
+                                )
+                        ),
+                        new PathPackResources.PathResourcesSupplier(
+                                modDir.resolve(RESOURCES_PATH)
+                        ),
                         PackType.CLIENT_RESOURCES,
                         new PackSelectionConfig(true, Pack.Position.TOP, false)
                 );
@@ -93,9 +105,6 @@ public class ModInstance {
                     consumer.accept(pack);
                 }
             });
-
-            // Reload resources to apply the new pack
-            Minecraft.getInstance().reloadResourcePacks();
         } catch (Throwable e) {
             throw new LuaModLoadingException(e);
         }

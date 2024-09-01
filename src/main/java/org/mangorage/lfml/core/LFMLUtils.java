@@ -1,5 +1,6 @@
 package org.mangorage.lfml.core;
 
+import net.minecraft.world.level.block.Blocks;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
