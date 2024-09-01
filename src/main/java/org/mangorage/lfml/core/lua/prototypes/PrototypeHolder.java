@@ -5,8 +5,6 @@ import org.mangorage.lfml.core.api.IPrototype;
 
 import java.util.function.Supplier;
 
-import static org.mangorage.lfml.core.LFMLUtils.makeReadOnly;
-
 public final class PrototypeHolder implements IPrototype {
 
     public static PrototypeHolder of(Supplier<LuaTable> prototypeSupplier) {
@@ -17,7 +15,7 @@ public final class PrototypeHolder implements IPrototype {
     private final Supplier<LuaTable> prototypeSupplier;
 
     private PrototypeHolder(Supplier<LuaTable> prototypeSupplier) {
-        this.prototype = makeReadOnly(prototypeSupplier.get());
+        this.prototype = prototypeSupplier.get(); // TODO: Make Read Only, but allow for tables within to mark themselves as editable
         this.prototypeSupplier = prototypeSupplier;
     }
 

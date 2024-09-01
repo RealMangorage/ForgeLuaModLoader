@@ -2,7 +2,7 @@ local DeferredRegister = import("net.minecraftforge.registries.DeferredRegister"
 local Registries = import("net.minecraft.core.registries.Registries")
 local ItemPrototype = import("org.mangorage.lfml.core.lua.prototypes.item.ItemPrototype")
 local ItemProperties = import("net.minecraft.world.item.Item$Properties")
-local MC_BLOCKS = import("net.minecraft.world.level.block.Blocks")
+local MC_BLOCKS = import("BlockList")
 local ReturnType = import("org.mangorage.lfml.core.api.ReturnType")
 
 local ITEMS = DeferredRegister:create(Registries.ITEM, mod.modId)
@@ -29,7 +29,7 @@ end
 
 local items = {}
 
-function createOverridenPrototype()
+function createOverriddenPrototype()
     local prototype = mod.modules.items.example:get():getPrototypeHolder():extend()
     prototype.properties.replaceBlock = MC_BLOCKS.NETHERITE_BLOCK
     return prototype
@@ -47,7 +47,7 @@ items.example2 = ITEMS:register(
         "example2",
         ItemPrototype:create(
                 ItemProperties.new(),
-                createOverridenPrototype
+                createOverriddenPrototype
         )
 )
 
